@@ -6,7 +6,7 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
-  const [gmail, setGmail] = useState("");
+  // const [gmail, setGmail] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async () => {
@@ -168,3 +168,4 @@ const inputStyle = {
 };
 
 export default Register;
+
