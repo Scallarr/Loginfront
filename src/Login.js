@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [Gmail, setGmail] = useState("");
+  // const [Gmail, setGmail] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -212,3 +212,4 @@ function Login() {
 }
 
 export default Login;
+
