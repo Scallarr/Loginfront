@@ -13,11 +13,14 @@ export default function Chat() {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    axios.get("https://login-ue7d.onrender.com/users", {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setMe(res.data));
-  }, []);
+ useEffect(() => {
+  if (!token) return;
+
+  axios.get("https://login-ue7d.onrender.com/users", {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(res => setMe(res.data));
+}, [token]);
+
 
   useEffect(() => {
     axios.get("https://login-ue7d.onrender.com/all-users").then(res => {
