@@ -6,7 +6,7 @@ function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
-  // const [gmail, setGmail] = useState("");
+  const [gmail, setGmail] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async () => {
@@ -16,7 +16,7 @@ function Register() {
     }
 
     try {
-      const res = await axios.post("https://login-ue7d.onrender.com/register", {
+      await axios.post("https://login-ue7d.onrender.com/register", {
         username,
         password,
         password2,
@@ -168,4 +168,5 @@ const inputStyle = {
 };
 
 export default Register;
+
 
