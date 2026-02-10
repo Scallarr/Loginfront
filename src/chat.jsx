@@ -4,6 +4,7 @@ import socket from "./socket";
 import axios from "axios";
 import "./Chat.css";
 import { toast } from "react-hot-toast";
+import EmojiPicker, { Theme, EmojiStyle, Categories } from "emoji-picker-react";
 
 
 export default function Chat() {
@@ -18,6 +19,8 @@ export default function Chat() {
   const [previewImage, setPreviewImage] = useState(null);
   const [longPressMsg, setLongPressMsg] = useState(null);
   const longPressTimer = useRef(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiRef = useRef(null);
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
@@ -94,6 +97,21 @@ useEffect(() => {
 
 
 
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const onEmojiClick = (emojiData) => {
+    setMessage((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
 
   const selectUser = async (u) => {
     setTarget(u);
@@ -308,6 +326,40 @@ useEffect(() => {
               >
                 {uploading ? "..." : "📷"}
               </button>
+              <div className="emoji-wrapper" ref={emojiRef}>
+                <button
+                  className="emoji-btn"
+                  onClick={() => setShowEmojiPicker((prev) => !prev)}
+                >
+                  😊
+                </button>
+                {showEmojiPicker && (
+                  <div className="emoji-picker-container">
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      width={320}
+                      height={400}
+                      theme={Theme.DARK}
+                      emojiStyle={EmojiStyle.APPLE}
+                      searchPlaceholder="ค้นหา emoji..."
+                      previewConfig={{ showPreview: false }}
+                      lazyLoadEmojis={true}
+                      categories={[
+                        { category: Categories.SMILEYS_PEOPLE, name: "All Emoji" },
+                        { category: Categories.ANIMALS_NATURE, name: "" },
+                        { category: Categories.FOOD_DRINK, name: "" },
+                        { category: Categories.TRAVEL_PLACES, name: "" },
+                        { category: Categories.ACTIVITIES, name: "" },
+                        { category: Categories.OBJECTS, name: "" },
+                        { category: Categories.SYMBOLS, name: "" },
+                        { category: Categories.FLAGS, name: "" },
+                      ]}
+                      searchDisabled={false}
+                      skinTonesDisabled={true}
+                    />
+                  </div>
+                )}
+              </div>
               <input
                 value={message}
                 onChange={e => setMessage(e.target.value)}
