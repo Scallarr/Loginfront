@@ -6,7 +6,9 @@ import { useNavigate } from "react-router-dom";
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  // const [Gmail, setGmail] = useState("");
+  const [showPw, setShowPw] = useState(false);
+// const [, setGmail] = useState('');
+
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -84,13 +86,21 @@ function Login() {
 
         <div style={{ width: '100%', marginBottom: 18 }}>
           <label style={{ fontWeight: 500, color: '#e7e4e4', marginBottom: 6, display: 'block' ,fontSize: 17 }}>Password</label>
-          <input
-            style={{ width: '100%',  boxSizing: 'border-box', padding: '10px 14px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 16, marginBottom: 25 }}
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
+          <div style={{ position: 'relative', width: '100%' }}>
+            <input
+              style={{ width: '100%', boxSizing: 'border-box', padding: '10px 40px 10px 14px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 16, marginBottom: 25 }}
+              type={showPw ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            <span
+              onClick={() => setShowPw(!showPw)}
+              style={{ position: 'absolute', right: 10, top: 10, cursor: 'pointer', fontSize: 18, userSelect: 'none' }}
+            >
+              {showPw ? "🙈" : "👁️"}
+            </span>
+          </div>
         </div>
 
         <div style={{ width: '100%', display: 'flex',flexDirection: 'column', justifyContent: 'center',alignItems: 'center'}}>
@@ -130,7 +140,7 @@ function Login() {
     style={{
       background: "none",
       border: "none",
-      color: "#6c63ff",
+      color: "#ffffff",
       fontWeight: 500,
       cursor: "pointer",
       textDecoration: "underline",
@@ -147,7 +157,7 @@ function Login() {
     style={{
       background: "none",
       border: "none",
-      color: "#6c63ff",
+    color: "#ffffff",
       fontWeight: 500,
       cursor: "pointer",
       textDecoration: "underline",
@@ -196,7 +206,7 @@ function Login() {
   navigate("/chat");
     } catch (err) {
       console.error(err);
-      alert('Add user to DB failed');
+      alert(err.response?.data?.message || err.message || 'Add user to DB failed');
     }
   }}
   
@@ -212,4 +222,3 @@ function Login() {
 }
 
 export default Login;
-
