@@ -14,19 +14,22 @@ function ForgotPassword() {
   const otpRefs = useRef([]);
   const [countdown, setCountdown] = useState(0);
 
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [countdown > 0]);
+useEffect(() => {
+  if (countdown <= 0) return;
+
+  const timer = setInterval(() => {
+    setCountdown((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [countdown]);
+
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
