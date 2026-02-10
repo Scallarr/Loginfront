@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -8,7 +8,50 @@ function ForgotPassword() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const navigate = useNavigate();
+  const otpRefs = useRef([]);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown > 0]);
+
+  const handleOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = otp.split("");
+    while (newOtp.length < 6) newOtp.push("");
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp.join(""));
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    setOtp(paste);
+    const focusIndex = Math.min(paste.length, 5);
+    otpRefs.current[focusIndex]?.focus();
+  };
 
   // Step 1: ส่ง OTP ไปที่ gmail
   const handleSendOtp = async () => {
@@ -21,6 +64,7 @@ function ForgotPassword() {
         gmail,
       });
       alert("ส่ง OTP ไปที่อีเมลแล้ว");
+      setCountdown(300);
       setStep(2);
     } catch (err) {
       alert(err.response?.data?.message || "Error");
@@ -75,6 +119,7 @@ function ForgotPassword() {
       });
       alert("ส่ง OTP ใหม่แล้ว");
       setOtp("");
+      setCountdown(300);
     } catch (err) {
       alert(err.response?.data?.message || "Error");
     }
@@ -105,22 +150,53 @@ function ForgotPassword() {
         )}
 
         {/* Step 2: กรอก OTP */}
-        {step === 2 && (
+        {step === 2 && 
+        (
           <>
             <p style={styles.subtitle}>
               OTP ถูกส่งไปที่ <b>{gmail}</b>
             </p>
-            <div style={{ width: "100%", marginBottom: 16 }}>
+            <div style={{ width: "100%", marginBottom: 0 }}>
               <label style={styles.label}>OTP Code</label>
-              <input
-                style={{ ...styles.input, textAlign: "center", letterSpacing: 4 }}
-                placeholder="6-digit"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                maxLength={6}
-              />
+              <div style={styles.otpContainer}>
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <input
+                    key={i}
+                    ref={(el) => (otpRefs.current[i] = el)}
+                    style={styles.otpBox}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={otp[i] || ""}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    onPaste={handleOtpPaste}
+                  />
+                ))}
+              </div>
+            </div >
+            <div style={{ width: '100%', display: 'flex',flexDirection: 'column', justifyContent: 'end',alignItems: 'end'}}>
+            {countdown > 0 ? (
+              
+              <p style={styles.countdown}>
+                OTP จะหมดอายุใน{" "}
+                <span style={styles.countdownTime}>
+                  {String(Math.floor(countdown / 60)).padStart(2, "0")}:
+                  {String(countdown % 60).padStart(2, "0")}
+                </span>
+              </p>
+            ) : (
+              <p style={styles.countdownExpired}>OTP หมดอายุแล้ว กรุณาส่งใหม่</p>
+            )}
             </div>
-            <button style={styles.button} onClick={handleVerifyOtp}>
+            <button
+              style={{
+                ...styles.button,
+                ...(countdown <= 0 ? styles.buttonDisabled : {}),
+              }}
+              onClick={handleVerifyOtp}
+              disabled={countdown <= 0}
+            >
               Verify OTP
             </button>
             <span style={styles.link} onClick={handleResendOtp}>
@@ -135,36 +211,46 @@ function ForgotPassword() {
             <p style={styles.subtitle}>กรุณากรอกรหัสผ่านใหม่</p>
             <div style={{ width: "100%", marginBottom: 12 }}>
               <label style={styles.label}>New Password</label>
-              <input
-                type="password"
-                style={styles.input}
-                placeholder="New Password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+              <div style={styles.passwordWrapper}>
+                <input
+                  type={showNewPw ? "text" : "password"}
+                  style={styles.passwordInput}
+                  placeholder="New Password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <span style={styles.eyeBtn} onClick={() => setShowNewPw(!showNewPw)}>
+                  {showNewPw ? "🙈" : "👁️"}
+                </span>
+              </div>
             </div>
             <div style={{ width: "100%", marginBottom: 16 }}>
               <label style={styles.label}>Confirm Password</label>
-              <input
-                type="password"
-                style={styles.input}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
+              <div style={styles.passwordWrapper}>
+                <input
+                  type={showConfirmPw ? "text" : "password"}
+                  style={styles.passwordInput}
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <span style={styles.eyeBtn} onClick={() => setShowConfirmPw(!showConfirmPw)}>
+                  {showConfirmPw ? "🙈" : "👁️"}
+                </span>
+              </div>
             </div>
             <button style={styles.button} onClick={handleResetPassword}>
               Reset Password
             </button>
           </>
         )}
-
+<div    style={{ width: '100%', display: 'flex',flexDirection: 'column', justifyContent: 'end',alignItems: 'end'}}>
         <button
           onClick={() => navigate("/")}
           style={styles.backButton}
         >
           Back to Login
-        </button>
+        </button></div>
       </div>
     </div>
   );
@@ -209,6 +295,7 @@ const styles = {
   },
   label: {
     color: "#e7e4e4",
+    fontWeight: 500,
     fontSize: 16,
   },
   input: {
@@ -219,6 +306,28 @@ const styles = {
     border: "1px solid #d1d5db",
     fontSize: 16,
     marginTop: 6,
+  },
+  passwordWrapper: {
+    position: "relative",
+    width: "100%",
+    marginTop: 6,
+  },
+  passwordInput: {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "10px 40px 10px 14px",
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    fontSize: 16,
+  },
+  eyeBtn: {
+    position: "absolute",
+    right: 10,
+    top: "50%",
+    transform: "translateY(-50%)",
+    cursor: "pointer",
+    fontSize: 18,
+    userSelect: "none",
   },
   button: {
     width: "100%",
@@ -234,16 +343,57 @@ const styles = {
     boxShadow: "0 2px 8px rgba(76,76,120,0.08)",
   },
   link: {
-    color: "#000",
+    color: "#fffcfc",
     fontSize: 14,
     cursor: "pointer",
     textDecoration: "underline",
     marginTop: 12,
   },
+  
+  countdown: {
+    justifyContent: "end",
+    color: "#e7e4e4",
+    fontSize: 14,
+    textAlign: "center",
+    margin: "4px 0 12px",
+  },
+  countdownTime: {
+    color: "#48c6ef",
+    fontWeight: 700,
+    fontSize: 16,
+  },
+  countdownExpired: {
+    color: "#ff6b6b",
+    fontSize: 14,
+    textAlign: "center",
+    margin: "4px 0 12px",
+    fontWeight: 600,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
+  otpContainer: {
+    display: "flex",
+    gap: 8,
+    justifyContent: "center",
+    marginTop: 6,
+  },
+  otpBox: {
+    width: 42,
+    height: 48,
+    textAlign: "center",
+    fontSize: 22,
+    fontWeight: 600,
+    borderRadius: 8,
+    border: "1px solid #d1d5db",
+    outline: "none",
+  },
   backButton: {
+    alignItems: "start",
     background: "none",
     border: "none",
-    color: "#000",
+    color: "#fbf2f2",
     fontWeight: 500,
     cursor: "pointer",
     textDecoration: "underline",
